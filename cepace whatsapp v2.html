@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CEPACE · Central de WhatsApp v2 (HTML)</title>
+<style>
+:root{
+  --pj-azul:#1B4B8F; --pj-azul2:#2C6BB8; --pj-azul-dk:#123A70; --pj-azul-cl:#EAF1FA;
+  --pj-cinza:#5A6673; --pj-cinza-cl:#F0F2F5; --pj-borda:#C8D2DE; --pj-borda2:#DDE4EC;
+  --pj-verde:#1E7E34; --pj-verde-cl:#E4F3E8; --wa:#25D366; --wa-dk:#075E54;
+  --pj-vermelho:#C0392B; --pj-amarelo:#B8860B; --pj-laranja:#C2540C;
+  --tinta:#1A2530; --t2:#4A5560; --t3:#8592A0; --branco:#FFF; --papel:#F5F7FA;
+  --r:4px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',-apple-system,'Inter',sans-serif;background:var(--papel);color:var(--tinta);font-size:13px;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+
+/* ── barra institucional topo (estilo PROJUDI) ── */
+.gov-bar{background:var(--pj-azul-dk);color:#fff;padding:3px 16px;font-size:10.5px;letter-spacing:.02em;display:flex;align-items:center;gap:14px}
+.gov-bar .sep{opacity:.4}
+.gov-bar a{color:#B8D0EC;text-decoration:none}
+.header{background:var(--pj-azul);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:13px;border-bottom:3px solid var(--pj-amarelo)}
+.header .brasao{width:38px;height:38px;border-radius:5px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.header h1{font-size:16px;font-weight:600;line-height:1.1}
+.header .sub{font-size:10.5px;color:#C8DBF0;margin-top:1px}
+.header-r{margin-left:auto;display:flex;align-items:center;gap:16px}
+.header-stat{text-align:center}
+.header-stat b{font-size:16px;font-weight:700;display:block;line-height:1}
+.header-stat span{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:#A8C4E4}
+.vpn-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:var(--r);padding:4px 10px;font-size:10px;line-height:1.35;color:#DCE8F5}
+
+/* ── layout ── */
+.main{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 74px)}
+.col-fila{background:var(--branco);border-right:1px solid var(--pj-borda);display:flex;flex-direction:column;overflow:hidden}
+.fila-head{background:var(--pj-cinza-cl);border-bottom:1px solid var(--pj-borda);padding:8px 13px}
+.fila-head h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--pj-azul-dk)}
+.fila-head .ct{font-size:11px;color:var(--t3);margin-top:1px}
+.fila-tabs{display:flex;border-bottom:1px solid var(--pj-borda)}
+.fila-tab{flex:1;padding:7px;font-size:11px;font-weight:600;text-align:center;background:var(--pj-cinza-cl);border:none;border-right:1px solid var(--pj-borda);color:var(--t2)}
+.fila-tab:last-child{border-right:none}
+.fila-tab.on{background:var(--branco);color:var(--pj-azul);border-bottom:2px solid var(--pj-azul)}
+.fila-list{flex:1;overflow-y:auto}
+.fq{padding:10px 13px;border-bottom:1px solid var(--pj-borda2);cursor:pointer;display:flex;gap:10px}
+.fq:hover{background:var(--pj-azul-cl)}
+.fq.sel{background:var(--pj-azul-cl);box-shadow:inset 3px 0 0 var(--pj-azul)}
+.fq-urg{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.fq-body{flex:1;min-width:0}
+.fq-num{font-size:12px;font-weight:600;color:var(--pj-azul);font-family:'Consolas','JetBrains Mono',monospace}
+.fq-parte{font-size:12px;color:var(--tinta);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fq-meta{font-size:10.5px;color:var(--t3);margin-top:3px;display:flex;gap:8px;align-items:center}
+.fq-badge{font-size:9px;font-weight:700;text-transform:uppercase;padding:1px 6px;border-radius:3px;letter-spacing:.03em}
+
+/* ── workspace ── */
+.col-work{overflow-y:auto;background:var(--papel)}
+.work-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t3);gap:12px;padding:40px}
+.work-empty svg{opacity:.35}
+.work-empty h3{font-size:16px;color:var(--t2);font-weight:600}
+
+.wpanel{background:var(--branco);border:1px solid var(--pj-borda);border-radius:var(--r);margin:14px;overflow:hidden}
+.wpanel-h{background:var(--pj-cinza-cl);border-bottom:1px solid var(--pj-borda);padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--pj-azul-dk);display:flex;align-items:center;gap:8px}
+.wpanel-b{padding:14px}
+
+/* processo header */
+.proc-head{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--branco);border:1px solid var(--pj-borda);border-radius:var(--r);margin:14px 14px 0}
+.proc-num{font-size:16px;font-weight:700;color:var(--pj-azul);font-family:'Consolas',monospace}
+.proc-loc{font-size:11.5px;color:var(--t2);margin-top:2px}
+.proc-tags{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{font-size:9.5px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:3px;letter-spacing:.03em}
+
+/* form linha estilo PROJUDI */
+.frow{display:flex;gap:12px;margin-bottom:11px;flex-wrap:wrap}
+.fld{flex:1;min-width:140px}
+.fld label{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--pj-cinza);margin-bottom:3px}
+.fld input,.fld select{width:100%;border:1px solid var(--pj-borda);border-radius:var(--r);padding:7px 10px;font-size:13px;background:var(--branco);color:var(--tinta)}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--pj-azul2);box-shadow:0 0 0 2px var(--pj-azul-cl)}
+.fld input:read-only{background:var(--pj-cinza-cl);color:var(--t2)}
+
+/* natureza selector */
+.nat-sel{display:flex;gap:0;border:1px solid var(--pj-borda);border-radius:var(--r);overflow:hidden;width:fit-content}
+.nat-opt{padding:8px 20px;font-size:12.5px;font-weight:600;background:var(--branco);border:none;border-right:1px solid var(--pj-borda);color:var(--t2);display:flex;align-items:center;gap:7px}
+.nat-opt:last-child{border-right:none}
+.nat-opt.on{color:#fff}
+.nat-opt.on.citacao{background:var(--pj-azul)}
+.nat-opt.on.intimacao{background:var(--pj-verde)}
+
+/* anexo */
+.anexo-zone{border:2px dashed var(--pj-borda);border-radius:var(--r);padding:14px;text-align:center;background:var(--pj-cinza-cl);cursor:pointer;transition:.15s}
+.anexo-zone:hover{border-color:var(--pj-azul2);background:var(--pj-azul-cl)}
+.anexo-zone.has{border-style:solid;border-color:var(--pj-verde);background:var(--pj-verde-cl)}
+.anexo-ico{font-size:24px;margin-bottom:5px}
+.anexo-tx{font-size:12px;color:var(--t2)}
+.anexo-nome{font-size:12.5px;font-weight:600;color:var(--pj-verde)}
+
+/* chatbot area */
+.chat-seq{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.chat-msg{display:flex;gap:10px;align-items:flex-start}
+.chat-n{width:24px;height:24px;border-radius:50%;background:var(--pj-azul);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-bubble{flex:1;background:var(--pj-cinza-cl);border:1px solid var(--pj-borda2);border-radius:var(--r);padding:9px 12px;font-size:12.5px;line-height:1.5}
+.chat-bubble.sent{background:#DCF8C6;border-color:#B4E39A}
+.chat-status{font-size:9.5px;color:var(--t3);margin-top:4px;display:flex;align-items:center;gap:5px}
+.chat-send{background:var(--wa);color:#fff;border:none;border-radius:var(--r);padding:6px 12px;font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap}
+.chat-send:disabled{background:var(--pj-borda);color:var(--t3)}
+.chat-send.done{background:var(--pj-verde)}
+
+/* resposta parte */
+.resp-zone{margin-top:10px;padding-top:12px;border-top:1px dashed var(--pj-borda)}
+.resp-zone textarea{width:100%;border:1px solid var(--pj-borda);border-radius:var(--r);padding:9px;font-size:12.5px;min-height:52px;resize:vertical}
+.resp-add{background:var(--pj-azul);color:#fff;border:none;border-radius:var(--r);padding:7px 14px;font-size:11.5px;font-weight:600;margin-top:7px}
+
+/* prazo 72h */
+.prazo-box{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:var(--r);margin:0 14px 14px}
+.prazo-box.ok{background:var(--pj-verde-cl);border:1px solid #A8D5B5}
+.prazo-box.warn{background:#FDF3E0;border:1px solid #E8C77A}
+.prazo-box.exp{background:#FBE6E4;border:1px solid #E0A9A3}
+.prazo-ico{font-size:26px}
+.prazo-main b{font-size:20px;font-weight:700}
+.prazo-main span{font-size:11.5px;color:var(--t2);display:block}
+.prazo-datas{margin-left:auto;text-align:right;font-size:11px;color:var(--t2);line-height:1.6}
+.prazo-datas b{font-family:'Consolas',monospace;color:var(--tinta)}
+
+/* botões ação */
+.acts{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 14px}
+.btn{border:1px solid var(--pj-borda);background:var(--branco);color:var(--t2);border-radius:var(--r);padding:9px 15px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{background:var(--pj-cinza-cl)}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.wa:hover{background:#1FB855}
+.btn.pri{background:var(--pj-azul);border-color:var(--pj-azul);color:#fff}
+.btn.pri:hover{background:var(--pj-azul2)}
+.btn.ok{border-color:var(--pj-verde);color:var(--pj-verde)}
+.btn.ok:hover{background:var(--pj-verde);color:#fff}
+.btn.danger{border-color:var(--pj-vermelho);color:var(--pj-vermelho)}
+.btn.danger:hover{background:var(--pj-vermelho);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(18,58,112,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.on{display:flex}
+.modal{background:var(--branco);border-radius:var(--r);max-width:640px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.modal-h{background:var(--pj-azul);color:#fff;padding:12px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0}
+.modal-h h3{font-size:15px;font-weight:600;flex:1}
+.modal-x{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:var(--r);width:28px;height:28px;font-size:16px}
+.modal-b{padding:18px}
+
+/* espelho PDF preview */
+.espelho{background:var(--branco);border:1px solid var(--pj-borda);padding:22px;font-size:12px;line-height:1.6}
+.esp-head{text-align:center;border-bottom:2px solid var(--pj-azul);padding-bottom:12px;margin-bottom:14px}
+.esp-head h4{font-size:15px;color:var(--pj-azul-dk);font-weight:700}
+.esp-head .esp-sub{font-size:11px;color:var(--t2);margin-top:3px}
+.esp-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11.5px;margin-bottom:14px;padding:11px;background:var(--pj-cinza-cl);border-radius:var(--r)}
+.esp-meta b{color:var(--pj-cinza);font-weight:600}
+.esp-conv{border:1px solid var(--pj-borda2);border-radius:var(--r);padding:10px;margin-bottom:12px}
+.esp-msg{padding:7px 0;border-bottom:1px solid var(--pj-borda2);display:flex;gap:10px}
+.esp-msg:last-child{border:none}
+.esp-msg-dir{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:3px;height:fit-content;flex-shrink:0;width:64px;text-align:center}
+.esp-msg-dir.saida{background:var(--pj-azul-cl);color:var(--pj-azul)}
+.esp-msg-dir.entrada{background:#DCF8C6;color:var(--wa-dk)}
+.esp-msg-body{flex:1}
+.esp-msg-tx{font-size:12px}
+.esp-msg-time{font-size:10px;color:var(--t3);font-family:'Consolas',monospace;margin-top:2px}
+.esp-foot{border-top:1px solid var(--pj-borda);padding-top:10px;font-size:10px;color:var(--t3);text-align:center;line-height:1.6}
+.esp-hash{font-family:'Consolas',monospace;font-size:9.5px;word-break:break-all;color:var(--t2)}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:11px 20px;border-radius:var(--r);font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,.3);pointer-events:none}
+.toast.show{opacity:1}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+
+<div class="gov-bar">
+  <span>⚖ PODER JUDICIÁRIO · TRIBUNAL DE JUSTIÇA DO ESTADO DE GOIÁS</span>
+  <span class="sep">|</span>
+  <span>CEPACE · Central de Pautas Eletrônicas dos CEJUSCs</span>
+  <span class="sep">|</span>
+  <button onclick="if(confirm('Reiniciar todos os dados de exemplo? As conversas registradas serão apagadas.')){window.LOCAL.reset();location.reload();}" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#DCE8F5;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;margin-left:auto">↻ Reiniciar dados</button><span id="gov-relogio" style="font-family:Consolas,monospace"></span>
+</div>
+
+<header class="header">
+  <div class="brasao">⚖</div>
+  <div><h1>Central de WhatsApp — Citações e Intimações</h1><div class="sub">Sistema integrado PROJUDI / SAPJUD · v2.0</div></div>
+  <div class="header-r">
+    <div class="header-stat"><b id="st-fila">0</b><span>Na fila</span></div>
+    <div class="header-stat"><b id="st-abertas">0</b><span>Em andamento</span></div>
+    <div class="header-stat"><b id="st-citadas">0</b><span>Concluídas</span></div>
+    <div class="vpn-badge">🔒 Servidor local<br>VPN-only · SQLite</div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- FILA -->
+  <aside class="col-fila">
+    <div class="fila-head"><h2>Processos</h2><div class="ct" id="fila-ct">carregando…</div></div>
+    <div class="fila-tabs">
+      <button class="fila-tab on" data-f="todos" onclick="setFiltro('todos')">Todos</button>
+      <button class="fila-tab" data-f="pendente" onclick="setFiltro('pendente')">Pendentes</button>
+      <button class="fila-tab" data-f="andamento" onclick="setFiltro('andamento')">Em andamento</button>
+    </div>
+    <div class="fila-list" id="fila-list"></div>
+  </aside>
+
+  <!-- WORKSPACE -->
+  <main class="col-work" id="work">
+    <div class="work-empty">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#8592A0" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <h3>Selecione um processo</h3>
+      <p style="font-size:12.5px;color:#8592A0">Escolha um processo na lista para preparar a comunicação por WhatsApp.</p>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:#8592A0;pointer-events:none">Versão HTML · dados salvos neste navegador (localStorage)</div>
+<script>// ═══════════════════════════════════════════════════════════════════
+// CEPACE · Central WhatsApp v2 — BACKEND EMBUTIDO (versão HTML única)
+// Replica a lógica do servidor Node, mas persiste em localStorage.
+// Substitui as chamadas fetch() por um cliente local (window.LOCAL).
+// ═══════════════════════════════════════════════════════════════════
+(function () {
+  const KEY = 'cepace_wa_v2';
+  const PRAZO_HORAS = 72;
+
+  // ─── templates + certidões (iguais ao seed.js do servidor) ─────
+  const TEMPLATES = {
+    citacao: [
+      { ordem: 1, texto: 'Bom dia. Aqui é o CEPACE — Central de Pautas dos CEJUSCs do Tribunal de Justiça de Goiás. Poderia confirmar se falo com {PARTE}?' },
+      { ordem: 2, texto: 'Trata-se de comunicação oficial referente ao processo nº {NUMERO}. Esta é uma CITAÇÃO judicial. Por favor, confirme o recebimento respondendo "CIENTE".' },
+      { ordem: 3, texto: 'Fica V.Sa. CITADA para os termos do processo nº {NUMERO}, com audiência de conciliação designada para {DATA} às {HORA}. Os documentos seguem em anexo. Em caso de dúvidas, mantenha este contato.' },
+    ],
+    intimacao: [
+      { ordem: 1, texto: 'Bom dia. Aqui é o CEPACE — Tribunal de Justiça de Goiás. Poderia confirmar se falo com {PARTE}?' },
+      { ordem: 2, texto: 'Comunicação oficial do processo nº {NUMERO}. Esta é uma INTIMAÇÃO. Confirme o recebimento respondendo "CIENTE".' },
+      { ordem: 3, texto: 'Fica V.Sa. INTIMADA da audiência designada para {DATA} às {HORA}, no processo nº {NUMERO}. CEPACE — TJ-GO.' },
+    ],
+  };
+  const CERTIDOES = {
+    citada: 'CERTIFICO que a parte requerida {PARTE} foi CITADA por meio do aplicativo WhatsApp, no processo nº {NUMERO}, tendo o primeiro contato ocorrido em {PRIMEIRO} e a conversa sido encerrada em {ENCERRADA}. O referido é verdade. CEPACE — TJ-GO.',
+    intimada: 'CERTIFICO que a parte {PARTE} foi INTIMADA por meio do aplicativo WhatsApp, no processo nº {NUMERO}, tendo o primeiro contato ocorrido em {PRIMEIRO} e a conversa sido encerrada em {ENCERRADA}. O referido é verdade. CEPACE — TJ-GO.',
+    frustrada: 'CERTIFICO que a tentativa de comunicação da parte {PARTE} por meio do aplicativo WhatsApp restou FRUSTRADA, no processo nº {NUMERO}. Primeiro contato em {PRIMEIRO}. O referido é verdade. CEPACE — TJ-GO.',
+  };
+
+  // ─── estado inicial (seed) ──────────────────────────────────────
+  function seedData() {
+    const hoje = new Date();
+    const fmt = (d) => d.toISOString().slice(0, 10);
+    const addDays = (n) => { const d = new Date(hoje); d.setDate(d.getDate() + n); return fmt(d); };
+    return {
+      processos: [
+        { id: 'proc_1', numero: '5530864-44.2025.8.09.0043', comarca: 'Firminópolis', vara: 'Juizado Especial Cível', etapa: 'decisao_lida', urgencia: 3, audiencia_data: addDays(1), audiencia_hora: '14:00', audiencia_tipo: 'Conciliação' },
+        { id: 'proc_2', numero: '5837527-09.2025.8.09.0051', comarca: 'Goiânia', vara: '2º Juizado Especial Cível', etapa: 'decisao_lida', urgencia: 3, audiencia_data: addDays(2), audiencia_hora: '09:30', audiencia_tipo: 'Conciliação' },
+        { id: 'proc_3', numero: '5012345-88.2025.8.09.0100', comarca: 'Anápolis', vara: '1º Juizado', etapa: 'wa_enviado', urgencia: 2, audiencia_data: addDays(6), audiencia_hora: '11:00', audiencia_tipo: 'Mediação' },
+        { id: 'proc_4', numero: '5098765-12.2025.8.09.0175', comarca: 'Rio Verde', vara: 'Juizado Cível', etapa: 'carta_mandado', urgencia: 1, audiencia_data: addDays(20), audiencia_hora: '15:00', audiencia_tipo: 'Conciliação' },
+        { id: 'proc_5', numero: '5044556-77.2025.8.09.0043', comarca: 'Firminópolis', vara: 'Juizado Especial Cível', etapa: 'recebido', urgencia: 1, audiencia_data: null, audiencia_hora: null },
+        { id: 'proc_6', numero: '5087654-33.2025.8.09.0051', comarca: 'Goiânia', vara: '3º Juizado', etapa: 'recebido', urgencia: 0, audiencia_data: null, audiencia_hora: null },
+      ],
+      partes: [
+        { id: 1, processo_id: 'proc_1', nome: 'MARIA APARECIDA SOUZA', polo: 'passivo', telefone: '62991234567', defensoria: 0 },
+        { id: 2, processo_id: 'proc_2', nome: 'JOÃO PEREIRA LIMA', polo: 'passivo', telefone: '62998887766', defensoria: 0 },
+        { id: 3, processo_id: 'proc_3', nome: 'ANTONIO CARLOS DEFENSORIA', polo: 'passivo', telefone: '62997776655', defensoria: 1 },
+        { id: 4, processo_id: 'proc_4', nome: 'FERNANDA COSTA RIBEIRO', polo: 'passivo', telefone: '', defensoria: 0 },
+        { id: 5, processo_id: 'proc_5', nome: 'CARLOS EDUARDO MARTINS', polo: 'passivo', telefone: '62996665544', defensoria: 0 },
+        { id: 6, processo_id: 'proc_6', nome: 'PATRICIA GOMES ALVES', polo: 'passivo', telefone: '62995554433', defensoria: 0 },
+      ],
+      conversas: [],
+      mensagens: [],
+      auditoria: [],
+      _seq: { conversa: 100, mensagem: 1000, audit: 1 },
+    };
+  }
+
+  // ─── persistência ───────────────────────────────────────────────
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    const s = seedData(); save(s); return s;
+  }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  let DB = load();
+
+  // ─── helpers ────────────────────────────────────────────────────
+  const now = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
+  function addHours(ts, h) { const d = new Date(ts.replace(' ', 'T')); d.setHours(d.getHours() + h); return d.toISOString().slice(0, 19).replace('T', ' '); }
+  function fmtBR(ts) { if (!ts) return '—'; const d = new Date(ts.replace(' ', 'T')); return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  function audit(ato, o = {}) { DB.auditoria.push({ id: DB._seq.audit++, ato, processo_id: o.processo_id || null, conversa_id: o.conversa_id || null, detalhe: o.detalhe || null, em: now() }); }
+  function preencher(tpl, ctx) {
+    return tpl.replace(/\{PARTE\}/g, ctx.parte || 'a parte').replace(/\{NUMERO\}/g, ctx.numero || '')
+      .replace(/\{DATA\}/g, ctx.data ? fmtBR(ctx.data + ' 00:00:00').slice(0, 10) : '—').replace(/\{HORA\}/g, ctx.hora || '')
+      .replace(/\{PRIMEIRO\}/g, ctx.primeiro ? fmtBR(ctx.primeiro) : '—').replace(/\{ENCERRADA\}/g, ctx.encerrada ? fmtBR(ctx.encerrada) : '—');
+  }
+
+  function conversaFull(id) {
+    const c = DB.conversas.find(x => x.id === id);
+    if (!c) return null;
+    const out = { ...c };
+    out.mensagens = DB.mensagens.filter(m => m.conversa_id === id).sort((a, b) => (a.ordem - b.ordem) || (a.id - b.id));
+    out.processo = DB.processos.find(p => p.id === c.processo_id);
+    out.parte = DB.partes.find(p => p.id === c.parte_id) || {};
+    if (c.primeiro_envio) {
+      out.prazo_expira = addHours(c.primeiro_envio, PRAZO_HORAS);
+      const restMs = new Date(out.prazo_expira.replace(' ', 'T')) - new Date();
+      out.prazo_horas_restantes = Math.max(0, Math.round(restMs / 3.6e6));
+      out.prazo_expirado = restMs <= 0;
+    }
+    return out;
+  }
+
+  // ─── "API" local (mesma assinatura do servidor) ────────────────
+  const LOCAL = {
+    // GET /api/templates
+    templates() { return TEMPLATES; },
+
+    // GET /api/stats
+    stats() {
+      return {
+        total: DB.processos.length,
+        criticos: DB.processos.filter(p => p.urgencia >= 3).length,
+        convAbertas: DB.conversas.filter(c => c.status === 'aberta').length,
+        citadas: DB.conversas.filter(c => c.status === 'citada').length,
+      };
+    },
+
+    // GET /api/processos
+    processos() {
+      return DB.processos.slice().sort((a, b) => b.urgencia - a.urgencia).map(p => {
+        const parte = DB.partes.find(x => x.processo_id === p.id && x.polo === 'passivo') || {};
+        const conv = DB.conversas.filter(c => c.processo_id === p.id).sort((a, b) => b.id - a.id)[0] || null;
+        return { ...p, parte, conversa: conv };
+      });
+    },
+
+    // GET /api/processos/:id
+    processo(id) {
+      const p = DB.processos.find(x => x.id === id);
+      if (!p) return null;
+      const out = { ...p };
+      out.partes = DB.partes.filter(x => x.processo_id === id);
+      out.conversas = DB.conversas.filter(c => c.processo_id === id).sort((a, b) => b.id - a.id);
+      return out;
+    },
+
+    // POST /api/conversas
+    criarConversa(body) {
+      const c = {
+        id: ++DB._seq.conversa, processo_id: body.processo_id, parte_id: body.parte_id || null,
+        natureza: body.natureza, telefone: body.telefone || '', anexo_nome: body.anexo_nome || null,
+        status: 'aberta', primeiro_envio: null, encerrada_em: null, prazo_expira: null, criado_em: now(),
+      };
+      DB.conversas.push(c); audit('conversa_iniciada', { processo_id: c.processo_id, conversa_id: c.id, detalhe: c.natureza }); save(DB);
+      return conversaFull(c.id);
+    },
+
+    // GET /api/conversas/:id
+    conversa(id) { return conversaFull(id); },
+
+    // POST /api/conversas/:id/mensagem
+    mensagem(cid, body) {
+      const c = DB.conversas.find(x => x.id === cid);
+      if (!c) return { erro: 'não encontrada' };
+      const ts = now();
+      DB.mensagens.push({ id: ++DB._seq.mensagem, conversa_id: cid, direcao: body.direcao || 'saida', texto: body.texto, enviada_em: ts, ordem: body.ordem || 0 });
+      if (!c.primeiro_envio && (body.direcao || 'saida') === 'saida') {
+        c.primeiro_envio = ts; c.prazo_expira = addHours(ts, PRAZO_HORAS);
+        audit('primeiro_envio', { processo_id: c.processo_id, conversa_id: cid, detalhe: ts });
+      }
+      audit('mensagem_' + (body.direcao || 'saida'), { processo_id: c.processo_id, conversa_id: cid }); save(DB);
+      return conversaFull(cid);
+    },
+
+    // POST /api/conversas/:id/status
+    status(cid, body) {
+      const c = DB.conversas.find(x => x.id === cid);
+      if (!c) return { erro: 'não encontrada' };
+      c.status = body.status;
+      if (['citada', 'frustrada', 'encerrada'].includes(body.status)) c.encerrada_em = now();
+      if (body.status === 'citada') { const p = DB.processos.find(x => x.id === c.processo_id); if (p) p.etapa = 'citado'; }
+      audit('status_' + body.status, { processo_id: c.processo_id, conversa_id: cid }); save(DB);
+      return conversaFull(cid);
+    },
+
+    // GET /api/conversas/:id/certidao
+    certidao(cid, tipo) {
+      const c = conversaFull(cid); if (!c) return { erro: 'não encontrada' };
+      tipo = tipo || (c.natureza === 'citacao' ? 'citada' : 'intimada');
+      const texto = preencher(CERTIDOES[tipo] || CERTIDOES.citada, { parte: c.parte.nome, numero: c.processo.numero, primeiro: c.primeiro_envio, encerrada: c.encerrada_em || now() });
+      return { tipo, texto };
+    },
+
+    // GET /api/conversas/:id/espelho
+    espelho(cid) {
+      const c = conversaFull(cid); if (!c) return { erro: 'não encontrada' };
+      return {
+        processo: c.processo.numero, comarca: c.processo.comarca, vara: c.processo.vara,
+        parte: c.parte.nome, telefone: c.telefone, natureza: c.natureza, status: c.status, anexo: c.anexo_nome,
+        primeiro_envio: c.primeiro_envio, primeiro_envio_br: fmtBR(c.primeiro_envio),
+        encerrada_em: c.encerrada_em, encerrada_em_br: fmtBR(c.encerrada_em || now()), prazo_expira_br: fmtBR(c.prazo_expira),
+        mensagens: c.mensagens.map(m => ({ direcao: m.direcao, texto: m.texto, em: m.enviada_em, em_br: fmtBR(m.enviada_em) })),
+      };
+    },
+
+    // PATCH /api/partes/:id
+    parte(id, body) {
+      const p = DB.partes.find(x => x.id === id); if (!p) return { erro: 'não encontrada' };
+      if (body.telefone != null) p.telefone = body.telefone;
+      if (body.nome != null) p.nome = body.nome;
+      save(DB); return p;
+    },
+
+    // utilitário: resetar dados
+    reset() { DB = seedData(); save(DB); },
+  };
+
+  // ─── adaptador fetch → LOCAL (para o app.js funcionar sem mudanças) ─
+  window.fetch = async function (url, opt) {
+    opt = opt || {}; const method = opt.method || 'GET';
+    const body = opt.body ? JSON.parse(opt.body) : {};
+    const J = (d) => ({ json: async () => d });
+    let m;
+    if (url.includes('/api/templates')) return J(LOCAL.templates());
+    if (url.includes('/api/stats')) return J(LOCAL.stats());
+    if ((m = url.match(/\/api\/processos\/([^/?]+)/))) return J(LOCAL.processo(m[1]));
+    if (url.match(/\/api\/processos/)) return J(LOCAL.processos());
+    if (method === 'POST' && url.match(/\/api\/conversas$/)) return J(LOCAL.criarConversa(body));
+    if ((m = url.match(/\/conversas\/(\d+)\/mensagem/))) return J(LOCAL.mensagem(+m[1], body));
+    if ((m = url.match(/\/conversas\/(\d+)\/status/))) return J(LOCAL.status(+m[1], body));
+    if ((m = url.match(/\/conversas\/(\d+)\/certidao/))) { const t = (url.split('tipo=')[1] || '').split('&')[0]; return J(LOCAL.certidao(+m[1], t)); }
+    if ((m = url.match(/\/conversas\/(\d+)\/espelho/))) return J(LOCAL.espelho(+m[1]));
+    if ((m = url.match(/\/conversas\/(\d+)$/))) return J(LOCAL.conversa(+m[1]));
+    if (method === 'PATCH' && (m = url.match(/\/partes\/(\d+)/))) return J(LOCAL.parte(+m[1], body));
+    return J({});
+  };
+
+  window.LOCAL = LOCAL; // exposto para o botão de reset
+})();
+</script>
+<script>// ═══════════════════════════════════════════════════════════════════
+// CEPACE · Central de WhatsApp v2 — Frontend
+// Agente 2 (recursos) + Agente 3 (espelho PDF). Fala com a API local.
+// ═══════════════════════════════════════════════════════════════════
+const API = '';  // mesmo host (servidor serve o front)
+let PROCESSOS = [];
+let TEMPLATES = {};
+let sel = null;        // processo selecionado (objeto)
+let convAtual = null;  // conversa em andamento
+let natureza = 'citacao';
+let anexoNome = null;
+let filtro = 'todos';
+let msgsEnviadas = {}; // ordem -> true (chatbot)
+
+// ─── util ─────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+async function api(method, url, body) {
+  const opt = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opt.body = JSON.stringify(body);
+  const r = await fetch(API + url, opt);
+  return r.json();
+}
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600); }
+const UCOR = ['#5A6673', '#B8860B', '#C2540C', '#C0392B'];
+const ULBL = ['Regular', 'Atenção', 'Prioritário', 'Urgente'];
+
+// ─── relógio institucional ────────────────────────────────────────
+setInterval(() => { const e = $('gov-relogio'); if (e) e.textContent = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, 1000);
+
+// ─── carga inicial ────────────────────────────────────────────────
+async function init() {
+  TEMPLATES = await api('GET', '/api/templates');
+  await carregar();
+}
+async function carregar() {
+  PROCESSOS = await api('GET', '/api/processos');
+  const s = await api('GET', '/api/stats');
+  $('st-fila').textContent = s.total - s.citadas;
+  $('st-abertas').textContent = s.convAbertas;
+  $('st-citadas').textContent = s.citadas;
+  renderFila();
+  if (sel) renderWork();
+}
+
+// ─── FILA ─────────────────────────────────────────────────────────
+function setFiltro(f) { filtro = f; document.querySelectorAll('.fila-tab').forEach(b => b.classList.toggle('on', b.dataset.f === f)); renderFila(); }
+function renderFila() {
+  let list = PROCESSOS.slice();
+  if (filtro === 'pendente') list = list.filter(p => !p.conversa || p.conversa.status === 'aberta');
+  else if (filtro === 'andamento') list = list.filter(p => p.conversa && p.conversa.status === 'aberta');
+  $('fila-ct').textContent = list.length + ' processo(s)';
+  $('fila-list').innerHTML = list.map(p => {
+    const est = p.conversa ? p.conversa.status : null;
+    const estBadge = est ? `<span class="fq-badge" style="background:${estCor(est).bg};color:${estCor(est).c}">${estLbl(est)}</span>` : '';
+    const aud = p.audiencia_data ? `📅 ${fmtData(p.audiencia_data)}` : '';
+    return `<div class="fq ${sel && sel.id === p.id ? 'sel' : ''}" onclick="selecionar('${p.id}')">
+      <div class="fq-urg" style="background:${UCOR[p.urgencia]}"></div>
+      <div class="fq-body">
+        <div class="fq-num">${p.numero}</div>
+        <div class="fq-parte">${p.parte.nome || '—'}${p.parte.defensoria ? ' ⚖' : ''}</div>
+        <div class="fq-meta"><span class="fq-badge" style="background:${UCOR[p.urgencia]}22;color:${UCOR[p.urgencia]}">${ULBL[p.urgencia]}</span>${aud}${estBadge}</div>
+      </div></div>`;
+  }).join('') || '<div style="padding:26px;text-align:center;color:#8592A0;font-size:12px">Nenhum processo.</div>';
+}
+function estCor(s) { return ({ aberta: { bg: '#EAF1FA', c: '#1B4B8F' }, citada: { bg: '#E4F3E8', c: '#1E7E34' }, confirmada: { bg: '#FDF3E0', c: '#B8860B' }, frustrada: { bg: '#FBE6E4', c: '#C0392B' }, encerrada: { bg: '#F0F2F5', c: '#5A6673' } }[s] || { bg: '#F0F2F5', c: '#5A6673' }); }
+function estLbl(s) { return ({ aberta: 'Em andamento', citada: 'Citada ✓', confirmada: 'Confirmada', frustrada: 'Frustrada', encerrada: 'Encerrada' }[s] || s); }
+function fmtData(d) { if (!d) return '—'; const p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0].slice(2); }
+
+// ─── SELECIONAR PROCESSO ──────────────────────────────────────────
+async function selecionar(id) {
+  sel = await api('GET', '/api/processos/' + id);
+  natureza = sel.audiencia_data ? 'intimacao' : 'citacao';
+  // se já tem conversa aberta, retoma
+  convAtual = (sel.conversas || []).find(c => c.status === 'aberta') || null;
+  if (convAtual) convAtual = await api('GET', '/api/conversas/' + convAtual.id);
+  anexoNome = convAtual ? convAtual.anexo_nome : null;
+  msgsEnviadas = {};
+  if (convAtual) (convAtual.mensagens || []).forEach(m => { if (m.direcao === 'saida' && m.ordem) msgsEnviadas[m.ordem] = true; });
+  renderFila();
+  renderWork();
+}
+
+// ─── WORKSPACE ────────────────────────────────────────────────────
+function renderWork() {
+  const p = sel; if (!p) return;
+  const parte = (p.partes || []).find(x => x.polo === 'passivo') || (p.partes || [])[0] || {};
+  const seq = TEMPLATES[natureza] || [];
+  const ctx = { parte: parte.nome, numero: p.numero, data: p.audiencia_data, hora: p.audiencia_hora };
+
+  let h = '';
+
+  // header do processo
+  h += `<div class="proc-head">
+    <div><div class="proc-num">${p.numero}</div><div class="proc-loc">${p.comarca || ''} — ${p.vara || ''}</div></div>
+    <div class="proc-tags">
+      <span class="tag" style="background:${UCOR[p.urgencia]}18;color:${UCOR[p.urgencia]}">${ULBL[p.urgencia]}</span>
+      ${p.audiencia_data ? `<span class="tag" style="background:#EAF1FA;color:#1B4B8F">🗓 ${fmtData(p.audiencia_data)} ${p.audiencia_hora || ''}</span>` : ''}
+    </div></div>`;
+
+  // 1. DADOS DA PARTE + NATUREZA (layout do print: nome + telefone lado a lado)
+  h += `<div class="wpanel"><div class="wpanel-h">① Dados da comunicação</div><div class="wpanel-b">
+    <div class="frow">
+      <div class="fld" style="flex:2"><label>Nome da parte</label><input id="in-nome" value="${(parte.nome || '').replace(/"/g, '&quot;')}" onchange="salvarParte(${parte.id})"></div>
+      <div class="fld"><label>Telefone (WhatsApp)</label><input id="in-fone" value="${parte.telefone || ''}" placeholder="(62) 90000-0000" onchange="salvarParte(${parte.id})"></div>
+    </div>
+    <div class="frow" style="align-items:flex-end">
+      <div class="fld" style="flex:0"><label>Natureza do evento</label>
+        <div class="nat-sel">
+          <button class="nat-opt citacao ${natureza === 'citacao' ? 'on' : ''}" onclick="setNatureza('citacao')">⚖ Citação</button>
+          <button class="nat-opt intimacao ${natureza === 'intimacao' ? 'on' : ''}" onclick="setNatureza('intimacao')">📩 Intimação</button>
+        </div>
+      </div>
+      <div class="fld"><label>Processo</label><input value="${p.numero}" readonly></div>
+    </div>
+    ${parte.defensoria ? '<div style="background:#FBE6E4;border-left:3px solid #C0392B;border-radius:4px;padding:9px 12px;font-size:12px;color:#7A1F17;margin-top:4px"><b>⚖ Defensoria Pública:</b> exige DOIS atos — intimação pessoal pelo Sistema E intimação pessoal da Parte. O WhatsApp cobre o segundo ato.</div>' : ''}
+  </div></div>`;
+
+  // 2. ANEXO PDF
+  h += `<div class="wpanel"><div class="wpanel-h">② Documento anexo (PDF)</div><div class="wpanel-b">
+    <div class="anexo-zone ${anexoNome ? 'has' : ''}" onclick="$('file-pdf').click()">
+      <div class="anexo-ico">${anexoNome ? '📎' : '📄'}</div>
+      ${anexoNome ? `<div class="anexo-nome">${anexoNome}</div><div class="anexo-tx">clique para trocar</div>` : '<div class="anexo-tx">Clique para anexar o PDF (mandado, decisão, etc.)</div>'}
+    </div>
+    <input type="file" id="file-pdf" accept="application/pdf" style="display:none" onchange="anexar(this)">
+  </div></div>`;
+
+  // 3. CHATBOT — sequência de mensagens
+  h += `<div class="wpanel"><div class="wpanel-h">③ Chatbot — sequência de mensagens</div><div class="wpanel-b">
+    <div class="chat-seq">`;
+  seq.forEach(step => {
+    const texto = preencher(step.texto, ctx);
+    const enviada = msgsEnviadas[step.ordem];
+    h += `<div class="chat-msg">
+      <div class="chat-n">${step.ordem}</div>
+      <div class="chat-bubble ${enviada ? 'sent' : ''}">${texto.replace(/</g, '&lt;')}
+        ${enviada ? '<div class="chat-status">✓ enviada e registrada</div>' : ''}
+      </div>
+      <button class="chat-send ${enviada ? 'done' : ''}" ${enviada ? 'disabled' : ''} onclick="enviarMsg(${step.ordem}, this)">${enviada ? '✓' : '▶ Enviar'}</button>
+    </div>`;
+  });
+  h += `</div>`;
+
+  // resposta da parte (colar)
+  if (convAtual) {
+    const entradas = (convAtual.mensagens || []).filter(m => m.direcao === 'entrada');
+    h += `<div class="resp-zone">
+      <label style="font-size:10.5px;font-weight:600;text-transform:uppercase;color:#5A6673;display:block;margin-bottom:5px">Resposta da parte (colar do WhatsApp)</label>
+      ${entradas.map(e => `<div class="chat-bubble sent" style="margin-bottom:6px">${e.texto.replace(/</g, '&lt;')}<div class="chat-status">recebida ${fmtHora(e.enviada_em)}</div></div>`).join('')}
+      <textarea id="resp-txt" placeholder="Cole aqui a resposta que a parte enviou…"></textarea>
+      <button class="resp-add" onclick="colarResposta()">+ Registrar resposta</button>
+    </div>`;
+  }
+  h += `</div></div>`;
+
+  // 4. PRAZO 72H (se conversa iniciada)
+  if (convAtual && convAtual.primeiro_envio) {
+    const rest = convAtual.prazo_horas_restantes;
+    const cls = convAtual.prazo_expirado ? 'exp' : rest <= 12 ? 'warn' : 'ok';
+    const ico = convAtual.prazo_expirado ? '⛔' : rest <= 12 ? '⚠️' : '⏱';
+    h += `<div class="prazo-box ${cls}">
+      <div class="prazo-ico">${ico}</div>
+      <div class="prazo-main"><b>${convAtual.prazo_expirado ? 'Prazo expirado' : rest + 'h restantes'}</b><span>Prazo de 72 horas desde o primeiro contato</span></div>
+      <div class="prazo-datas">1º envio: <b>${fmtDataHora(convAtual.primeiro_envio)}</b><br>Expira em: <b>${fmtDataHora(convAtual.prazo_expira)}</b></div>
+    </div>`;
+  }
+
+  // 5. AÇÕES
+  const parteFone = (parte.telefone || '').replace(/\D/g, '');
+  h += `<div class="acts">`;
+  if (!convAtual) {
+    h += `<button class="btn pri" onclick="iniciarConversa()">▶ Iniciar comunicação</button>`;
+  } else {
+    h += `<button class="btn ok" onclick="marcarStatus('${natureza === 'citacao' ? 'citada' : 'confirmada'}')">✓ ${natureza === 'citacao' ? 'Citação efetivada' : 'Confirmar recebimento'}</button>`;
+    h += `<button class="btn danger" onclick="marcarStatus('frustrada')">✗ Frustrada</button>`;
+    h += `<button class="btn pri" onclick="verEspelho()">🖨 Espelho da conversa (PDF)</button>`;
+  }
+  h += `</div>`;
+
+  $('work').innerHTML = h;
+}
+
+function preencher(t, c) {
+  return t.replace(/\{PARTE\}/g, c.parte || 'a parte')
+    .replace(/\{NUMERO\}/g, c.numero || '')
+    .replace(/\{DATA\}/g, c.data ? fmtData(c.data) : '—')
+    .replace(/\{HORA\}/g, c.hora || '');
+}
+function fmtHora(ts) { if (!ts) return ''; const d = new Date(ts.replace(' ', 'T')); return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+function fmtDataHora(ts) { if (!ts) return '—'; const d = new Date(ts.replace(' ', 'T')); return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+
+// ─── ações ────────────────────────────────────────────────────────
+function setNatureza(n) { natureza = n; renderWork(); }
+async function salvarParte(id) {
+  if (!id) return;
+  await api('PATCH', '/api/partes/' + id, { nome: $('in-nome').value, telefone: $('in-fone').value });
+}
+function anexar(input) {
+  const f = input.files[0];
+  if (!f) return;
+  if (f.type !== 'application/pdf') { toast('Apenas arquivos PDF'); return; }
+  anexoNome = f.name;
+  if (convAtual) { /* já existe: só atualiza nome localmente */ }
+  toast('PDF anexado: ' + f.name);
+  renderWork();
+}
+
+async function iniciarConversa() {
+  const parte = (sel.partes || []).find(x => x.polo === 'passivo') || {};
+  const fone = ($('in-fone') ? $('in-fone').value : parte.telefone || '').replace(/\D/g, '');
+  if (!fone) { toast('Cadastre o telefone primeiro'); return; }
+  convAtual = await api('POST', '/api/conversas', {
+    processo_id: sel.id, parte_id: parte.id, natureza, telefone: fone, anexo_nome: anexoNome,
+  });
+  msgsEnviadas = {};
+  toast('Comunicação iniciada');
+  await carregar();
+}
+
+async function enviarMsg(ordem, btn) {
+  if (!convAtual) { await iniciarConversa(); if (!convAtual) return; }
+  const p = sel;
+  const parte = (p.partes || []).find(x => x.polo === 'passivo') || {};
+  const seq = TEMPLATES[natureza] || [];
+  const step = seq.find(s => s.ordem === ordem);
+  const ctx = { parte: parte.nome, numero: p.numero, data: p.audiencia_data, hora: p.audiencia_hora };
+  const texto = preencher(step.texto, ctx);
+  const fone = (parte.telefone || '').replace(/\D/g, '');
+
+  btn.innerHTML = '<span class="spin"></span>';
+  // 1) registra no banco
+  convAtual = await api('POST', '/api/conversas/' + convAtual.id + '/mensagem', { direcao: 'saida', texto, ordem });
+  msgsEnviadas[ordem] = true;
+  // 2) abre o WhatsApp Web com a mensagem (operador envia)
+  const url = 'https://web.whatsapp.com/send?phone=55' + fone + '&text=' + encodeURIComponent(texto);
+  window.open(url, '_blank', 'noopener');
+  toast('Mensagem ' + ordem + ' registrada · WhatsApp Web aberto');
+  await carregar();
+}
+
+async function colarResposta() {
+  const txt = $('resp-txt').value.trim();
+  if (!txt) { toast('Cole a resposta primeiro'); return; }
+  convAtual = await api('POST', '/api/conversas/' + convAtual.id + '/mensagem', { direcao: 'entrada', texto: txt, ordem: 0 });
+  toast('Resposta da parte registrada');
+  renderWork();
+}
+
+async function marcarStatus(status) {
+  if (!convAtual) return;
+  convAtual = await api('POST', '/api/conversas/' + convAtual.id + '/status', { status });
+  const nomes = { citada: 'Citação efetivada', confirmada: 'Recebimento confirmado', frustrada: 'Tentativa frustrada' };
+  toast('✓ ' + (nomes[status] || status));
+  if (status === 'citada' || status === 'frustrada') {
+    // oferece certidão
+    const tipo = status === 'citada' ? 'citada' : 'frustrada';
+    const cert = await api('GET', '/api/conversas/' + convAtual.id + '/certidao?tipo=' + tipo);
+    mostrarCertidao(cert);
+  }
+  await carregar();
+}
+
+// ─── CERTIDÃO ─────────────────────────────────────────────────────
+function mostrarCertidao(cert) {
+  const o = $('overlay');
+  o.querySelector('.modal').innerHTML = `<div class="modal-h"><h3>Certidão gerada</h3><button class="modal-x" onclick="fechar()">×</button></div>
+    <div class="modal-b"><div class="espelho" style="font-family:Georgia,serif;line-height:1.8">${cert.texto}</div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn pri" style="flex:1" onclick="copiar(\`${cert.texto.replace(/`/g, '')}\`)">⧉ Copiar certidão</button><button class="btn" onclick="fechar()">Fechar</button></div></div>`;
+  o.classList.add('on');
+}
+function copiar(t) { navigator.clipboard && navigator.clipboard.writeText(t); toast('Copiado'); fechar(); }
+function fechar() { $('overlay').classList.remove('on'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// AGENTE 3 · ESPELHO DA CONVERSA (PDF probatório)
+// ═══════════════════════════════════════════════════════════════════
+async function verEspelho() {
+  const esp = await api('GET', '/api/conversas/' + convAtual.id + '/espelho');
+  const hash = await gerarHash(JSON.stringify(esp));
+  const natLabel = esp.natureza === 'citacao' ? 'CITAÇÃO' : 'INTIMAÇÃO';
+
+  const msgsHtml = esp.mensagens.map(m => `
+    <div class="esp-msg">
+      <span class="esp-msg-dir ${m.direcao}">${m.direcao === 'saida' ? 'CEPACE' : 'PARTE'}</span>
+      <div class="esp-msg-body"><div class="esp-msg-tx">${m.texto.replace(/</g, '&lt;')}</div><div class="esp-msg-time">${m.em_br}</div></div>
+    </div>`).join('');
+
+  const espelhoHtml = `
+    <div class="espelho" id="espelho-doc">
+      <div class="esp-head">
+        <h4>ESPELHO DE CONVERSA — ${natLabel} VIA WHATSAPP</h4>
+        <div class="esp-sub">CEPACE · Tribunal de Justiça do Estado de Goiás · Documento probatório</div>
+      </div>
+      <div class="esp-meta">
+        <div><b>Processo:</b> ${esp.processo}</div>
+        <div><b>Natureza:</b> ${natLabel}</div>
+        <div><b>Comarca:</b> ${esp.comarca || '—'}</div>
+        <div><b>Vara:</b> ${esp.vara || '—'}</div>
+        <div><b>Parte:</b> ${esp.parte || '—'}</div>
+        <div><b>Telefone:</b> ${esp.telefone || '—'}</div>
+        <div><b>Anexo:</b> ${esp.anexo || 'nenhum'}</div>
+        <div><b>Situação:</b> ${estLbl(esp.status)}</div>
+      </div>
+      <div style="display:flex;gap:14px;margin-bottom:12px;padding:10px;background:#EAF1FA;border-radius:4px;font-size:11.5px">
+        <div>🟢 <b>1º envio:</b> ${esp.primeiro_envio_br}</div>
+        <div>🔴 <b>Encerramento:</b> ${esp.encerrada_em_br}</div>
+        <div>⏱ <b>Limite 72h:</b> ${esp.prazo_expira_br}</div>
+      </div>
+      <div class="esp-conv">${msgsHtml || '<div style="color:#8592A0;text-align:center;padding:12px">Sem mensagens registradas.</div>'}</div>
+      <div class="esp-foot">
+        Documento gerado eletronicamente pela Central de WhatsApp do CEPACE em ${new Date().toLocaleString('pt-BR')}.<br>
+        Integridade (SHA-256): <span class="esp-hash">${hash}</span><br>
+        CEPACE · Central de Pautas Eletrônicas dos CEJUSCs · TJ-GO
+      </div>
+    </div>`;
+
+  const o = $('overlay');
+  o.querySelector('.modal').style.maxWidth = '720px';
+  o.querySelector('.modal').innerHTML = `<div class="modal-h"><h3>🖨 Espelho da conversa</h3><button class="modal-x" onclick="fechar()">×</button></div>
+    <div class="modal-b">${espelhoHtml}
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn pri" style="flex:1" onclick="imprimirEspelho()">🖨 Imprimir / Salvar PDF</button>
+      <button class="btn" onclick="fechar()">Fechar</button>
+    </div></div>`;
+  o.classList.add('on');
+}
+
+function imprimirEspelho() {
+  const doc = $('espelho-doc').outerHTML;
+  const css = document.querySelector('style').innerHTML;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Espelho — CEPACE</title><style>${css} body{background:#fff;padding:24px}.espelho{border:none;max-width:none}@media print{@page{margin:1.5cm}}</style></head><body>${doc}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 400);
+}
+
+async function gerarHash(str) {
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) { return '(hash indisponível)'; }
+}
+
+// atualiza contador de prazo a cada minuto
+setInterval(() => { if (convAtual && convAtual.primeiro_envio && $('work')) selecionar(sel.id); }, 60000);
+
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) fechar(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fechar(); });
+
+init();
+</script>
+</body>
+</html>
